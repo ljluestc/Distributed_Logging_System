@@ -3,8 +3,8 @@ package main
 import (
 	"time"
 
-	"distributed_logging_system/golang/microservices/config"
-	"distributed_logging_system/golang/microservices/node"
+	"distributed_logging_system/microservices/config"
+	"distributed_logging_system/microservices/node"
 )
 
 func main() {

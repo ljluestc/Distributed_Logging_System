@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
+	"bytes"
 
-	"distributed_logging_system/golang/central/internal/tracker"
-	"distributed_logging_system/golang/pkg/kafka"
+	"distributed_logging_system/central/internal/tracker"
+	"distributed_logging_system/pkg/kafka"
 
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/esapi"
@@ -14,62 +16,13 @@ import (
 )
 
 func mustIndex(es *elasticsearch.Client, index string, doc map[string]any) {
-	req := esapi.IndexRequest{
-		Index: index,
-		Body:  esutilReader(doc),
-	}
+	b, _ := json.Marshal(doc)
+	req := esapi.IndexRequest{Index: index, Body: bytes.NewReader(b)}
 	res, err := req.Do(context.Background(), es)
 	if err == nil && res != nil {
 		defer res.Body.Close()
 	}
 }
-
-// esutilReader is a tiny helper to avoid pulling an extra package here.
-func esutilReader(v map[string]any) *nopCloser {
-	return &nopCloser{Reader: toJSONReader(v)}
-}
-
-type nopCloser struct{ Reader *jsonReader }
-
-func (n *nopCloser) Read(p []byte) (int, error) { return n.Reader.Read(p) }
-func (n *nopCloser) Close() error               { return nil }
-
-// lightweight JSON reader
-type jsonReader struct {
-	data []byte
-	pos  int
-}
-
-func toJSONReader(v map[string]any) *jsonReader {
-	b, _ := jsonMarshal(v)
-	return &jsonReader{data: b}
-}
-
-func (r *jsonReader) Read(p []byte) (int, error) {
-	if r.pos >= len(r.data) {
-		return 0, ioEOF{}
-	}
-	n := copy(p, r.data[r.pos:])
-	r.pos += n
-	return n, nil
-}
-
-type ioEOF struct{}
-
-func (ioEOF) Error() string { return "EOF" }
-
-// minimal JSON marshal without extra deps (delegates to std json)
-func jsonMarshal(v map[string]any) ([]byte, error) {
-	return json.Marshal(v)
-}
-
-// local json import aliasing
-// (placed here to keep file self-contained)
-//nolint:all
-import (
-	"encoding/json"
-	"io"
-)
 
 func main() {
 	bootstrap := "192.168.222.127:9092"

@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"distributed_logging_system/golang/microservices/config"
-	"distributed_logging_system/golang/pkg/fluent"
-	"distributed_logging_system/golang/pkg/kafka"
+	"distributed_logging_system/microservices/config"
+	"distributed_logging_system/pkg/fluent"
+	"distributed_logging_system/pkg/kafka"
 
 	"github.com/fatih/color"
 	"github.com/google/uuid"
